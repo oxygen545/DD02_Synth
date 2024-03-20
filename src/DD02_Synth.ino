@@ -70,6 +70,7 @@ static const uint16_t EEPROM_SIZE = EEPROM.length();
 */
 // RESEARCH NOTE  not sure how to send to All Channels via OMNI
 // zero based 0-15
+uint8_t midiReceiveChannel = 0;
 uint8_t midiTransmitChannel = 1;
 uint32_t MidiClock = 0;
 bool clockRunning = false;
@@ -221,9 +222,12 @@ public:
       Envelope[i]->setDecayLevel((voiceData.decayLevel[i] * velocity) >> 7);
       Envelope[i]->setSustainLevel((voiceData.sustainLevel[i] * velocity) >> 7);
       Envelope[i]->setReleaseLevel((voiceData.releaseLevel[i] * velocity) >> 7);
-      if(voiceData.hasRetrigger[i]==true) {
+      if (voiceData.hasRetrigger[i] == true)
+      {
         Envelope[i]->noteOn(true);
-      } else {
+      }
+      else
+      {
         Envelope[i]->noteOn(false);
       }
     }
@@ -536,6 +540,10 @@ void noteOff(byte channel, byte pitch, byte velocity)
 
 void programChange(byte channel, byte program, byte value)
 {
+  if (midiReceiveChannel != channel)
+  {
+    return;
+  }
 
 #ifdef SEND_MIDI
   midiEventPacket_t event = {0x0B, 0xB0 | midiTransmitChannel, program, value};
@@ -569,6 +577,11 @@ void controlChange(byte channel, byte control, byte value)
   Serial.print(", val:");
   Serial.println(value);
 #endif
+  if (midiReceiveChannel != channel)
+  {
+    return;
+  }
+
   switch (control)
   {
   case 0:              // Bank Select for Presets
@@ -615,7 +628,7 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 17: // Envelope 0 Attack Time
     Voice.voiceData.attackTime[0] = value;
-    Voice.Envelope[0]->setAttackTime(Voice.voiceData.attackTime[0] * pow(10,  Voice.voiceData.attackScale[0]));
+    Voice.Envelope[0]->setAttackTime(Voice.voiceData.attackTime[0] * pow(10, Voice.voiceData.attackScale[0]));
     break;
   case 18: // Envelope 0 Attack Level
     Voice.voiceData.attackLevel[0] = value;
@@ -627,7 +640,7 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 20: // Main Envelope Decay Time
     Voice.voiceData.decayTime[0] = value;
-    Voice.Envelope[0]->setDecayTime(Voice.voiceData.decayTime[0] * pow(10,  Voice.voiceData.decayScale[0]));
+    Voice.Envelope[0]->setDecayTime(Voice.voiceData.decayTime[0] * pow(10, Voice.voiceData.decayScale[0]));
     break;
   case 21: // Envelope 0 Decay Level
     Voice.voiceData.decayLevel[0] = value;
@@ -639,7 +652,7 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 23: // Main Envelope Sustain Time
     Voice.voiceData.sustainTime[0] = value;
-    Voice.Envelope[0]->setSustainTime(Voice.voiceData.sustainTime[0] * pow(10,  Voice.voiceData.sustainScale[0]));
+    Voice.Envelope[0]->setSustainTime(Voice.voiceData.sustainTime[0] * pow(10, Voice.voiceData.sustainScale[0]));
     break;
   case 24: // Envelope 0 Sustain Level
     Voice.voiceData.sustainLevel[0] = value;
@@ -651,7 +664,7 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 26: // Envelope 0 Main Envelope Release Time
     Voice.voiceData.releaseTime[0] = value;
-    Voice.Envelope[0]->setReleaseTime(Voice.voiceData.releaseTime[0] * pow(10,  Voice.voiceData.releaseScale[0]));
+    Voice.Envelope[0]->setReleaseTime(Voice.voiceData.releaseTime[0] * pow(10, Voice.voiceData.releaseScale[0]));
     break;
   case 27: // Envelope 0 Release Level
     Voice.voiceData.releaseLevel[0] = value;
@@ -663,7 +676,7 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 29: // Envelope 1 Attack Time
     Voice.voiceData.attackTime[1] = value;
-    Voice.Envelope[1]->setAttackTime(Voice.voiceData.attackTime[1] * pow(10,  Voice.voiceData.attackScale[1]));
+    Voice.Envelope[1]->setAttackTime(Voice.voiceData.attackTime[1] * pow(10, Voice.voiceData.attackScale[1]));
     break;
   case 30: // Envelope 1 Attack Level
     Voice.voiceData.attackLevel[1] = value;
@@ -675,7 +688,7 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 32: // Envelope 1 Decay Time
     Voice.voiceData.decayTime[1] = value;
-    Voice.Envelope[1]->setDecayTime(Voice.voiceData.decayTime[1] * pow(10,  Voice.voiceData.decayScale[1]));
+    Voice.Envelope[1]->setDecayTime(Voice.voiceData.decayTime[1] * pow(10, Voice.voiceData.decayScale[1]));
     break;
   case 33: // Envelope 1 Decay Level
     Voice.voiceData.decayLevel[1] = value;
@@ -687,7 +700,7 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 35: // Envelope 1 Sustain Time
     Voice.voiceData.sustainTime[1] = value;
-    Voice.Envelope[1]->setSustainTime(Voice.voiceData.sustainTime[1] * pow(10,  Voice.voiceData.sustainScale[1]));
+    Voice.Envelope[1]->setSustainTime(Voice.voiceData.sustainTime[1] * pow(10, Voice.voiceData.sustainScale[1]));
     break;
   case 36: // Envelope 1 Sustain Level
     Voice.voiceData.sustainLevel[1] = value;
@@ -699,7 +712,7 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 38: // Envelope 1 Release Time
     Voice.voiceData.releaseTime[1] = value;
-    Voice.Envelope[1]->setReleaseTime(Voice.voiceData.releaseTime[1] * pow(10,  Voice.voiceData.releaseScale[2]));
+    Voice.Envelope[1]->setReleaseTime(Voice.voiceData.releaseTime[1] * pow(10, Voice.voiceData.releaseScale[2]));
     break;
   case 39: // Envelope 1 Release Level
     Voice.voiceData.releaseLevel[1] = value;
@@ -711,7 +724,7 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 41: // Envelope 2 Attack Time
     Voice.voiceData.attackTime[2] = value;
-    Voice.Envelope[2]->setAttackTime(Voice.voiceData.attackTime[2] * pow(10,  Voice.voiceData.attackScale[2]));
+    Voice.Envelope[2]->setAttackTime(Voice.voiceData.attackTime[2] * pow(10, Voice.voiceData.attackScale[2]));
     break;
   case 42: // Envelope 2 Attack Level
     Voice.voiceData.attackLevel[2] = value;
@@ -723,7 +736,7 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 44: // Envelope 2 Decay Time
     Voice.voiceData.decayTime[2] = value;
-    Voice.Envelope[2]->setDecayTime(Voice.voiceData.decayTime[2] * pow(10,  Voice.voiceData.decayScale[2]));
+    Voice.Envelope[2]->setDecayTime(Voice.voiceData.decayTime[2] * pow(10, Voice.voiceData.decayScale[2]));
     break;
   case 45: // Envelope 2 Decay Level
     Voice.voiceData.decayLevel[2] = value;
@@ -735,7 +748,7 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 47: // Envelope 2 Sustain Time
     Voice.voiceData.sustainTime[2] = value;
-    Voice.Envelope[2]->setSustainTime(Voice.voiceData.sustainTime[2] * pow(10,  Voice.voiceData.sustainScale[2]));
+    Voice.Envelope[2]->setSustainTime(Voice.voiceData.sustainTime[2] * pow(10, Voice.voiceData.sustainScale[2]));
     break;
   case 48: // Envelope 2 Sustain Level
     Voice.voiceData.sustainLevel[2] = value;
@@ -747,7 +760,7 @@ void controlChange(byte channel, byte control, byte value)
     break;
   case 50: // Envelope 2 Release Time
     Voice.voiceData.releaseTime[2] = value;
-    Voice.Envelope[2]->setReleaseTime(Voice.voiceData.releaseTime[2] * pow(10,  Voice.voiceData.releaseScale[2]));
+    Voice.Envelope[2]->setReleaseTime(Voice.voiceData.releaseTime[2] * pow(10, Voice.voiceData.releaseScale[2]));
     break;
   case 51: // Envelope 2 Release Level
     Voice.voiceData.releaseLevel[2] = value;
@@ -875,6 +888,22 @@ void controlChange(byte channel, byte control, byte value)
   case 77:
     Voice.voiceData.transpose = map(value, 0, 127, -24, 24);
     break;
+    case 78: // set Receive Channel
+#ifdef DEBUG_PRINT
+    Serial.print("oldRx:");
+    Serial.print(midiReceiveChannel);
+    Serial.print(" newRx:");
+#endif
+    if (value > 15)
+    {
+      midiReceiveChannel = 0;
+      break;
+    }
+    midiReceiveChannel = value;
+#ifdef DEBUG_PRINT
+    Serial.println(midiReceiveChannel);
+#endif
+    break;
   case 119: // reset
     resetFunc();
     break;
@@ -919,6 +948,11 @@ void pitchBend(byte channel, byte lsb, byte msb)
   Serial.print(", value:");
   Serial.println(value);
 #endif
+  if (midiReceiveChannel != channel)
+  {
+    return;
+  }
+
   if (value == 16384)
   {
     for (uint8_t i = 0; i < NUM_OSCILLATORS; i++)
@@ -967,6 +1001,11 @@ void sysex(byte channel, byte lsb, byte msb)
   Serial.print(" lsb:");
   Serial.println(lsb, HEX);
 #endif
+  if (midiReceiveChannel != channel)
+  {
+    return;
+  }
+
 };
 
 void handleMidi()
