@@ -100,7 +100,7 @@ struct VoiceData
   uint8_t wave_shape[NUM_OSCILLATORS];
   uint8_t algorithm = 0;
   bool hasRetrigger[NUM_OSCILLATORS + 1]; // needed for wet/dry mixes
-  uint8_t auxDepth[NUM_OSCILLATORS];
+  uint8_t phase_shift[NUM_OSCILLATORS];
   // Modulator
   byte mod_depth[NUM_OSCILLATORS + 1]; // needed for wet/dry mixes
 
@@ -158,6 +158,7 @@ public:
     for (uint8_t i = 0; i < NUM_OSCILLATORS; i++)
     {
       Osc[i] = new Oscil<NUM_CELLS, AUDIO_RATE>(WAVE_DATA0);
+      voiceData.phase_shift[i] = 0;
     }
     for (uint8_t i = 0; i < NUM_ENVELOPES; i++)
     {
@@ -429,7 +430,11 @@ int updateAudio()
     env[i] = Voice.Envelope[i]->next();
     Signal[i] = 0;
   }
-
+  // ******************************************** PHASE STUFF ********************************************
+  for(uint8_t i = 0;i<NUM_OSCILLATORS;i++)
+  {
+      Voice.Osc[i]->setPhaseFractional(Voice.Osc[i]->getPhaseFractional() + (Voice.voiceData.phase_shift[i] * (NUM_CELLS/127)));
+  }
   // ALGORITHM Stuff
   switch (Voice.voiceData.algorithm)
   {
@@ -877,10 +882,10 @@ void controlChange(byte channel, byte control, byte value)
     // Voice.voiceData.hasRetrigger[2] = map(value, 0, 1, false, true);
     break;
   case 74:
-    Voice.voiceData.auxDepth[0] = value;
+    Voice.voiceData.phase_shift[0] = value;
     break;
   case 75:
-    Voice.voiceData.auxDepth[1] = value;
+    Voice.voiceData.phase_shift[1] = value;
     break;
   case 76:
     // Voice.voiceData.auxDepth[2] = value;
