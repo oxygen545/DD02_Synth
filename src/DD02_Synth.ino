@@ -13,7 +13,7 @@ TODO:
 
 #ifdef CONTROL_RATE
 #undef CONTROL_RATE
-#define CONTROL_RATE 256
+#define CONTROL_RATE 2048
 #endif
 
 //
@@ -313,6 +313,10 @@ public:
     // uint8_t minVer = EEPROM.read(ROM_MINOR_ADDR);    // get the version number for the preset for future versioning issues
     // uint8_t revVer = EEPROM.read(ROM_REVISION_ADDR); // get the version number for the preset for future versioning issues
     int Addr = ROM_FIRST_PRESET_ADDR + (idx * presetSize); // the address we will use to store the data
+    if(MAX_BANKS<=idx) {
+      // Load Failed idx to large
+      return;
+    }
     EEPROM.get(Addr, voiceData);
     for (uint8_t i = 0; i < NUM_OSCILLATORS; i++)
     {
@@ -563,7 +567,6 @@ void programChange(byte channel, byte program, byte value)
   Serial.print(", val:");
   Serial.println(value);
 #endif
-  Voice.load(program);
 }
 
 void controlChange(byte channel, byte control, byte value)
@@ -867,7 +870,7 @@ void controlChange(byte channel, byte control, byte value)
 #endif
     break;
   case 69:
-    PrintVoiceInfo();
+    Voice.load(value);
     break;
   case 70:
     Voice.start(Voice.channel, Voice.pitch, Voice.velocity);
