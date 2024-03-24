@@ -315,7 +315,7 @@ public:
     int Addr = ROM_FIRST_PRESET_ADDR + (idx * presetSize); // the address we will use to store the data
     if(MAX_BANKS<=idx) {
       // Load Failed idx to large
-      return;
+      return false;
     }
     EEPROM.get(Addr, voiceData);
     for (uint8_t i = 0; i < NUM_OSCILLATORS; i++)
